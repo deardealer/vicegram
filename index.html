@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VICEGRAM — Welcome to Leonida</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090909;color:white;font-family:Arial,sans-serif}
+header{position:sticky;top:0;background:#090909;padding:18px 16px;border-bottom:1px solid #292929;z-index:2}
+.logo{font-size:26px;font-weight:900;font-style:italic;letter-spacing:-1px}
+.tagline{font-family:Georgia,serif;font-style:italic;color:#ff579e;font-size:14px}
+main{max-width:520px;margin:auto;padding-bottom:85px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid #333;display:flex;justify-content:space-around;padding:14px;z-index:3}
+nav button{background:none;border:0;color:white;font-size:23px;cursor:pointer}
+section{display:none;padding:16px}
+section.active{display:block}
+.card{margin-bottom:28px;border-bottom:1px solid #292929;padding-bottom:18px}
+.author{padding:12px 0;font-weight:bold}
+.photo{width:100%;aspect-ratio:1/1;object-fit:cover;background:#222}
+.actions{display:flex;gap:18px;padding:12px 0}
+button{cursor:pointer}
+.action{background:none;border:0;color:white;font-size:22px}
+input,textarea{width:100%;background:#1c1c1c;border:1px solid #444;border-radius:8px;color:white;padding:13px;margin:8px 0;font-size:16px}
+.primary{background:#ff579e;color:#080808;border:0;border-radius:9px;padding:13px 20px;font-weight:bold;width:100%;margin-top:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.grid img{width:100%;aspect-ratio:1;object-fit:cover}
+.avatar{width:75px;height:75px;border-radius:50%;background:#ff579e;object-fit:cover}
+.muted{color:#999;font-size:13px}
+h2{font-size:21px}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">VICEGRAM</div>
+<div class="tagline">Welcome to Leonida</div>
+</header>
+
+<main>
+<section id="feed" class="active">
+<h2>Feed</h2>
+<div id="posts"></div>
+</section>
+
+<section id="explore">
+<h2>Discover</h2>
+<p class="muted">Explore virtual photography from Leonida.</p>
+<div id="discoverGrid" class="grid"></div>
+</section>
+
+<section id="upload">
+<h2>New Post</h2>
+<input type="file" id="photoInput" accept="image/*">
+<textarea id="caption" placeholder="Write a caption..."></textarea>
+<input id="location" placeholder="Add location (optional)">
+<button class="primary" onclick="publish()">Publish Photo</button>
+</section>
+
+<section id="map">
+<h2>Leonida Map</h2>
+<p class="muted">The interactive map will be added when a suitable game map becomes available.</p>
+<p>📍 Locations are optional when publishing.</p>
+</section>
+
+<section id="profile">
+<h2>My Profile</h2>
+<img id="avatarPreview" class="avatar" alt="Avatar">
+<h2 id="profileName">@photographer</h2>
+<p id="profileBio" class="muted">Virtual photographer in Leonida.</p>
+<p id="profileCount">0 posts</p>
+<details>
+<summary>Edit Profile</summary>
+<input id="username" placeholder="Username">
+<input id="bio" placeholder="Your bio">
+<input type="file" id="avatarInput" accept="image/*">
+<button class="primary" onclick="saveProfile()">Save Profile</button>
+</details>
+<h2>Photos</h2>
+<div id="profileGrid" class="grid"></div>
+</section>
+</main>
+
+<nav>
+<button onclick="show('feed')">⌂</button>
+<button onclick="show('explore')">⌕</button>
+<button onclick="show('upload')">＋</button>
+<button onclick="show('map')">⌖</button>
+<button onclick="show('profile')">◉</button>
+</nav>
+
+<script>
+let posts=JSON.parse(localStorage.getItem('vg_posts')||'[]');
+let profile=JSON.parse(localStorage.getItem('vg_profile')||'{"name":"photographer","bio":"Virtual photographer in Leonida.","avatar":""}');
+
+function show(id){
+ document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ render();
+ window.scrollTo(0,0);
+}
+function save(){
+ try{localStorage.setItem('vg_posts',JSON.stringify(posts))}
+ catch(e){alert('Browser storage is full. Try a smaller photo.')}
+}
+function readImage(file,callback){
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>callback(reader.result);
+ reader.readAsDataURL(file);
+}
+function publish(){
+ const file=document.getElementById('photoInput').files[0];
+ if(!file){alert('Choose a photo first');return}
+ readImage(file,img=>{
+  posts.unshift({
+   id:Date.now(),img,
+   caption:document.getElementById('caption').value,
+   location:document.getElementById('location').value,
+   likes:0,liked:false,comments:[]
+  });
+  save();
+  document.getElementById('photoInput').value='';
+  document.getElementById('caption').value='';
+  document.getElementById('location').value='';
+  show('feed');
+ });
+}
+function like(id){
+ const p=posts.find(x=>x.id===id);
+ if(!p)return;
+ p.liked=!p.liked;
+ p.likes+=p.liked?1:-1;
+ save();render();
+}
+function comment(id){
+ const value=prompt('Write a comment');
+ if(!value||!value.trim())return;
+ const p=posts.find(x=>x.id===id);
+ if(!p)return;
+ p.comments.push(value.trim());
+ save();render();
+}
+function saveProfile(){
+ profile.name=document.getElementById('username').value.trim()||'photographer';
+ profile.bio=document.getElementById('bio').value.trim();
+ const file=document.getElementById('avatarInput').files[0];
+ function finish(){
+  try{localStorage.setItem('vg_profile',JSON.stringify(profile))}
+  catch(e){alert('Could not save avatar')}
+  render();
+ }
+ if(file)readImage(file,img=>{profile.avatar=img;finish()});
+ else finish();
+}
+function render(){
+ document.getElementById('profileName').textContent='@'+profile.name;
+ document.getElementById('profileBio').textContent=profile.bio;
+ document.getElementById('username').value=profile.name;
+ document.getElementById('bio').value=profile.bio;
+ document.getElementById('avatarPreview').src=profile.avatar||'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="%23ff579e"/></svg>';
+ document.getElementById('profileCount').textContent=posts.length+' posts';
+ document.getElementById('posts').innerHTML='';
+ document.getElementById('profileGrid').innerHTML='';
+ document.getElementById('discoverGrid').innerHTML='';
+ posts.forEach(p=>{
+  const card=document.createElement('div');
+  card.className='card';
+  const author=document.createElement('div');
+  author.className='author';
+  author.textContent='@'+profile.name+(p.location?' · 📍 '+p.location:'');
+  const img=document.createElement('img');
+  img.className='photo';img.src=p.img;
+  const actions=document.createElement('div');
+  actions.className='actions';
+  const heart=document.createElement('button');
+  heart.className='action';
+  heart.textContent=p.liked?'♥':'♡';
+  heart.onclick=()=>like(p.id);
+  const bubble=document.createElement('button');
+  bubble.className='action';bubble.textContent='♧';
+  bubble.onclick=()=>comment(p.id);
+  actions.append(heart,bubble);
+  const info=document.createElement('div');
+  info.textContent=p.likes+' likes · '+p.comments.length+' comments';
+  const caption=document.createElement('p');
+  caption.textContent=p.caption;
+  const comments=document.createElement('div');
+  comments.className='muted';
+  comments.textContent=p.comments.join(' · ');
+  card.append(author,img,actions,info,caption,comments);
+  document.getElementById('posts').append(card);
+  ['profileGrid','discoverGrid'].forEach(id=>{
+   const thumb=document.createElement('img');
+   thumb.src=p.img;
+   thumb.onclick=()=>show('feed');
+   document.getElementById(id).append(thumb);
+  });
+ });
+}
+render();
+</script>
+</body>
+</html>
