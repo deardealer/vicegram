@@ -1,1 +1,1 @@
-VICEGRAM PWA for iPhone. Upload ALL files and assets/ contents to the GitHub repository root. In Safari use Share → Add to Home Screen → Open as Web App (if shown). This is a local-data prototype, not a multi-user backend. Icons are temporary V monogram.\n
+VICEGRAM PWA FULL WIDTH iPhone. Upload the contents of this folder (including assets) to the GitHub repository root. All 10 screens use viewport width minus 12px, consistent full height. Reopen installed PWA after deployment; if cached, close/reopen. Existing design assets retained.
