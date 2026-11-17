@@ -1,0 +1,63 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>VICEGRAM — THE FEED (без сторис)</title><style>*{box-sizing:border-box}html,body{margin:0;background:#080808;width:100%;height:100%;overflow:hidden}.screen{height:100dvh;max-width:calc(100dvh * 852 / 1846);width:100vw;margin:auto;position:relative;background:black}.screen img{display:block;width:100%;height:100%}.nav{position:absolute;left:2%;right:2%;bottom:1.2%;height:8%;display:grid;grid-template-columns:repeat(5,1fr)}.nav button{border:0;background:transparent;cursor:pointer;touch-action:manipulation}.nav button:focus-visible{outline:2px solid #ff1689}#toast{position:absolute;left:12%;right:12%;bottom:12%;padding:12px;border:1px solid #ff1689;border-radius:12px;background:#111;color:white;text-align:center;font:14px Arial;opacity:0;pointer-events:none;transition:opacity .2s}#toast.show{opacity:1}</style></head><body><main class="screen"><img alt="VICEGRAM THE FEED: без сторис, иконки пальмы, магнита, плюса, компаса и кровати сбоку" src="assets/03_8825573403.png"><nav class="nav" aria-label="Навигация"><button aria-label="Лента" data-name="THE FEED"></button><button aria-label="Поиск" data-name="DISCOVER"></button><button aria-label="Новая публикация" data-name="NEW MOMENT"></button><button aria-label="Карта" data-name="LEONIDA MAP"></button><button aria-label="Профиль" data-name="PROFILE"></button></nav><div id="toast" role="status"></div></main><script>let t;document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{const x=document.querySelector('#toast');x.textContent=b.dataset.name==='THE FEED'?'Вы на экране THE FEED':b.dataset.name+' — подключим после утверждения экранов';x.classList.add('show');clearTimeout(t);t=setTimeout(()=>x.classList.remove('show'),2200)}));</script>
+<script>
+(function(){
+const page=3;
+function go(to,info){parent.postMessage({vicegram:true,action:'go',to,info:info||{}},'*')}
+function notice(text){parent.postMessage({vicegram:true,action:'notice',text},'*')}
+document.addEventListener('click',function(e){
+ const nav=e.target.closest('.nav button');
+ if(nav){e.stopImmediatePropagation();e.preventDefault();go([3,3,4,5,6][[...nav.parentElement.children].indexOf(nav)]);return}
+ if(page===5){
+   const photo=e.target.closest('.photo');
+   if(photo){e.stopImmediatePropagation();e.preventDefault();go(10,{area:document.getElementById('areaTitle')?.textContent||'Vice City'});return}
+ }
+ if(page===6||page===7){
+   const stat=e.target.closest('.stat');
+   if(stat){let index=[...stat.parentElement.children].indexOf(stat);if(index===1||index===2){e.stopImmediatePropagation();go(index===1?8:9);return}}
+   if(e.target.closest('#grid img,#gallery img')){e.stopImmediatePropagation();go(10);return}
+ }
+ if(page===8||page===9){
+   const person=e.target.closest('.person');
+   if(person){e.stopImmediatePropagation();go(7,{username:person.dataset.user});return}
+ }
+ if(page===10){
+   if(e.target.closest('#author')){e.stopImmediatePropagation();go(7,{username:'ryan.305'});return}
+   if(e.target.closest('#backPost')){e.stopImmediatePropagation();go(5);return}
+ }
+},true);
+if(page===2){
+ document.getElementById('submit')?.addEventListener('click',()=>{
+   setTimeout(()=>{
+     const msg=document.getElementById('msg')?.textContent||'';
+     if(msg.startsWith('Form works.')){try{localStorage.setItem('vicegram_demo_user',document.getElementById('username')?.value||'vicecity_player')}catch(e){}go(3)}
+   },0);
+ });
+}
+if(page===4){
+ document.getElementById('share')?.addEventListener('click',()=>{
+  setTimeout(()=>{const posts=JSON.parse(localStorage.getItem('vicegram_posts')||'[]');if(posts.length){notice('Moment saved. Opening THE FEED.');go(3)}},70);
+ });
+}
+if(page===3){
+ const main=document.querySelector('.screen');
+ const feed=document.createElement('div');
+ feed.style.cssText='position:absolute;top:32%;left:6%;right:6%;bottom:11%;overflow:auto;color:white;font:14px Arial;scrollbar-width:none';
+ main.appendChild(feed);
+ let posts=[];try{posts=JSON.parse(localStorage.getItem('vicegram_posts')||'[]')}catch(e){}
+ posts.forEach((p,i)=>{
+   const item=document.createElement('div');item.style.cssText='margin-bottom:16px;cursor:pointer';
+   const who=document.createElement('div');who.textContent='@'+(localStorage.getItem('vicegram_demo_user')||'vicecity_player');who.style.cssText='padding:9px 0;font-weight:bold';
+   const img=document.createElement('img');img.src=p.image;img.style.cssText='width:100%;height:auto;max-height:320px;object-fit:contain;border-radius:8px';
+   const caption=document.createElement('p');caption.textContent=p.caption||'';item.append(who,img,caption);
+   item.addEventListener('click',()=>go(10,{postIndex:i}));feed.append(item)
+ });
+}
+if(page===7){
+ window.addEventListener('message',e=>{if(e.data?.vicegramProfile){const name=document.querySelector('.name');if(name)name.textContent='@'+e.data.vicegramProfile}});
+}
+if(page===10){
+ window.addEventListener('message',e=>{if(e.data?.vicegramPost){const info=e.data.vicegramPost;if(info.area){const area=document.querySelector('.location');if(area)area.textContent=info.area}}});
+}
+})();
+</script>
+</body></html>

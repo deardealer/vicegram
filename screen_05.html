@@ -1,0 +1,127 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no"><title>VICEGRAM — Leonida Map</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
+.screen{position:relative;width:100vw;height:100dvh;max-width:calc(100dvh * 946 / 2048);margin:auto;overflow:hidden;background:#000;container-type:inline-size}
+.art{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.content{position:absolute;top:22.5%;bottom:10.8%;left:1.6%;right:1.6%;background:#050505}
+.map{position:absolute;top:23.5%;left:5.3%;width:89.4%;height:55.8%;border:2px solid #fb1685;border-radius:4.3cqw;overflow:hidden;background:#2e699c;touch-action:none;cursor:grab}
+.map:active{cursor:grabbing}.world{position:absolute;inset:0;transform-origin:0 0;will-change:transform}.world img{position:absolute;height:100%;width:auto;aspect-ratio:1455/2048;left:50%;transform:translateX(-50%);display:block;pointer-events:none;user-select:none}#markers{position:absolute;top:0;left:50%;transform:translateX(-50%);height:100%;aspect-ratio:1455/2048}.marker{z-index:2}
+.marker{position:absolute;transform:translate(-50%,-50%);background:#f71a85;border:2px solid white;color:#fff;min-width:29px;height:29px;border-radius:50px;padding:0 5px;font-size:11px;font-weight:800;box-shadow:0 2px 7px #000a;cursor:pointer;touch-action:manipulation;white-space:nowrap}
+.marker:active{background:#c80964}
+.controls{position:absolute;top:80.2%;left:5.3%;right:5.3%;display:flex;align-items:center;justify-content:space-between;gap:1.5cqw}
+.controls button{font-size:3.2cqw;color:white;border:1px solid #f71984;background:#080808;border-radius:2cqw;min-height:31px;padding:1.2cqw 2.2cqw;cursor:pointer}
+.controls button:nth-child(3){margin-left:auto}
+.note{position:absolute;top:85%;left:5.3%;right:5.3%;color:#b8b8b8;font-size:2.7cqw;line-height:1.4;text-align:center}
+.nav{position:absolute;left:2%;right:2%;bottom:1.4%;height:6.9%;display:grid;grid-template-columns:repeat(5,1fr)}
+.nav button{border:0;background:transparent;cursor:pointer}
+.album{position:absolute;top:21.8%;bottom:10.5%;left:1.6%;right:1.6%;padding:0 3.7% 0;background:#050505;display:none;flex-direction:column;z-index:4}
+.album.show{display:flex}
+.album-head{display:flex;align-items:center;gap:2.5cqw;padding:1.5cqw 1cqw 3cqw;border-bottom:none;background:#050505}
+.back{background:none;border:1px solid #fb1985;color:#fff;border-radius:50%;width:35px;height:35px;font-size:22px;cursor:pointer}
+.album-head h2{font-size:5.3cqw;margin:0}.album-head p{margin:1cqw 0 0;color:#bbb;font-size:3cqw}
+.album-list{background:#050505;overflow:auto;min-height:0;padding:3cqw 1cqw 4cqw;display:grid;grid-template-columns:1fr 1fr;align-content:start;gap:2cqw}
+.photo{border:1px solid #d9237b;border-radius:2.5cqw;overflow:hidden;background:#161016;cursor:pointer;padding:0;text-align:left;color:white}
+.photo-visual{aspect-ratio:1/1;background:linear-gradient(145deg,#172f51,#c14980 57%,#fcb25b);display:flex;align-items:center;justify-content:center;font-size:10cqw}
+.photo:nth-child(2n) .photo-visual{background:linear-gradient(135deg,#062e46,#006c86,#ff7692)}
+.photo:nth-child(3n) .photo-visual{background:linear-gradient(145deg,#4c1d56,#ff6486,#ffb96a)}
+.photo small{display:block;padding:1.6cqw;font-size:2.6cqw}
+.overlay{position:absolute;inset:0;background:#000e;display:none;align-items:center;justify-content:center;z-index:7;padding:6%}
+.overlay.show{display:flex}.dialog{width:100%;border:1px solid #f71984;border-radius:4cqw;padding:5cqw;background:#130b12}.dialog button{background:#f71984;border:0;border-radius:2cqw;padding:2.5cqw 5cqw;color:white;font-weight:bold}
+@media(max-height:650px){.controls button{min-height:24px}}
+</style></head><body><main class="screen">
+<img class="art" src="assets/05_8105784575.png" alt="">
+<div class="content"></div>
+<div class="map" id="map"><div class="world" id="world"><img draggable="false" src="assets/05_5492726508.png" alt="Leonida map"><div id="markers"></div></div></div>
+<div class="controls"><button id="minus" aria-label="Zoom out">−</button><button id="plus" aria-label="Zoom in">+</button><button id="reset">Reset view</button></div>
+<div class="note">Drag to explore · Pinch to zoom · Tap a pink count to view photos</div>
+<div class="album" id="album"><div class="album-head"><button class="back" id="back" aria-label="Back to map">‹</button><div><h2 id="areaTitle"></h2><p id="areaCount"></p></div></div><div class="album-list" id="albumList"></div></div>
+<div class="overlay" id="photoDialog"><div class="dialog"><h3 id="photoTitle"></h3><p>Demo preview. Full posts and profiles will be connected later.</p><button id="closePhoto">Close</button></div></div>
+<nav class="nav" aria-label="Bottom navigation"><button aria-label="Feed"></button><button aria-label="Discover"></button><button aria-label="New Moment"></button><button aria-label="Leonida Map"></button><button aria-label="Profile"></button></nav>
+</main><script>
+const map=document.getElementById('map'),world=document.getElementById('world'),markers=document.getElementById('markers'),album=document.getElementById('album');
+const areas=[
+{name:'Port Gellhorn',x:.24,y:.35,count:86,icon:'🌴'},
+{name:'Ambrosia',x:.50,y:.33,count:42,icon:'🏘️'},
+{name:'Mount Kalaga',x:.52,y:.20,count:125,icon:'🌲'},
+{name:'Vice City',x:.79,y:.54,count:1280,icon:'🌆'},
+{name:'Grassrivers',x:.52,y:.77,count:214,icon:'🐊'},
+{name:'Leonida Keys',x:.50,y:.91,count:63,icon:'🌅'}
+];
+let scale=1,tx=0,ty=0,drag=null,moved=false,active=new Map(),lastDistance=0;
+function apply(){world.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`}
+function clamp(){const w=map.clientWidth,h=map.clientHeight;tx=Math.min(0,Math.max(w-w*scale,tx));ty=Math.min(0,Math.max(h-h*scale,ty))}
+function zoom(f,x=map.clientWidth/2,y=map.clientHeight/2){const ns=Math.max(1,Math.min(3,scale*f)),ratio=ns/scale;tx=x-(x-tx)*ratio;ty=y-(y-ty)*ratio;scale=ns;clamp();apply()}
+function openAlbum(area){document.getElementById('areaTitle').textContent=area.name;document.getElementById('areaCount').textContent=area.count.toLocaleString('en-US')+' photos · Community album';const list=document.getElementById('albumList');list.replaceChildren();for(let i=0;i<Math.min(area.count,8);i++){let b=document.createElement('button');b.className='photo';let visual=document.createElement('div');visual.className='photo-visual';visual.textContent=area.icon;let label=document.createElement('small');label.textContent='@leonida_player'+(i+1);b.append(visual,label);b.onclick=()=>{document.getElementById('photoTitle').textContent=area.name+' · Photo '+(i+1);document.getElementById('photoDialog').classList.add('show')};list.append(b)}album.classList.add('show')}
+areas.forEach(a=>{const b=document.createElement('button');b.className='marker';b.style.left=(a.x*100)+'%';b.style.top=(a.y*100)+'%';b.textContent=a.count>=1000?(a.count/1000).toFixed(1)+'K':a.count;b.title=a.name+' — '+a.count+' photos';b.setAttribute('aria-label',b.title);b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.stopPropagation();openAlbum(a)});markers.append(b)});
+document.getElementById('back').onclick=()=>album.classList.remove('show');document.getElementById('closePhoto').onclick=()=>document.getElementById('photoDialog').classList.remove('show');
+document.getElementById('minus').onclick=()=>zoom(1/1.4);document.getElementById('plus').onclick=()=>zoom(1.4);document.getElementById('reset').onclick=()=>{scale=1;tx=ty=0;apply()};
+function pos(e){let r=map.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+map.addEventListener('pointerdown',e=>{if(e.target.closest('.marker'))return;map.setPointerCapture(e.pointerId);const p=pos(e);active.set(e.pointerId,p);if(active.size===1){drag={...p,tx,ty};moved=false}});
+map.addEventListener('pointermove',e=>{if(!active.has(e.pointerId))return;const p=pos(e);active.set(e.pointerId,p);if(active.size===1&&drag){if(Math.hypot(p.x-drag.x,p.y-drag.y)>5)moved=true;tx=drag.tx+p.x-drag.x;ty=drag.ty+p.y-drag.y;clamp();apply()}else if(active.size===2){const [a,b]=[...active.values()];const dist=Math.hypot(a.x-b.x,a.y-b.y);if(lastDistance)zoom(dist/lastDistance,(a.x+b.x)/2,(a.y+b.y)/2);lastDistance=dist;moved=true}});
+function end(e){active.delete(e.pointerId);lastDistance=0;drag=null;setTimeout(()=>{moved=false},50)}map.addEventListener('pointerup',end);map.addEventListener('pointercancel',end);
+map.addEventListener('wheel',e=>{e.preventDefault();const p=pos(e);zoom(e.deltaY<0?1.2:1/1.2,p.x,p.y)},{passive:false});
+document.querySelectorAll('.nav button').forEach((b,i)=>b.onclick=()=>{if(i!==3)alert('Navigation will be connected when the nine screens are combined.')});
+apply();
+</script>
+<script>
+(function(){
+const page=5;
+function go(to,info){parent.postMessage({vicegram:true,action:'go',to,info:info||{}},'*')}
+function notice(text){parent.postMessage({vicegram:true,action:'notice',text},'*')}
+document.addEventListener('click',function(e){
+ const nav=e.target.closest('.nav button');
+ if(nav){e.stopImmediatePropagation();e.preventDefault();go([3,3,4,5,6][[...nav.parentElement.children].indexOf(nav)]);return}
+ if(page===5){
+   const photo=e.target.closest('.photo');
+   if(photo){e.stopImmediatePropagation();e.preventDefault();go(10,{area:document.getElementById('areaTitle')?.textContent||'Vice City'});return}
+ }
+ if(page===6||page===7){
+   const stat=e.target.closest('.stat');
+   if(stat){let index=[...stat.parentElement.children].indexOf(stat);if(index===1||index===2){e.stopImmediatePropagation();go(index===1?8:9);return}}
+   if(e.target.closest('#grid img,#gallery img')){e.stopImmediatePropagation();go(10);return}
+ }
+ if(page===8||page===9){
+   const person=e.target.closest('.person');
+   if(person){e.stopImmediatePropagation();go(7,{username:person.dataset.user});return}
+ }
+ if(page===10){
+   if(e.target.closest('#author')){e.stopImmediatePropagation();go(7,{username:'ryan.305'});return}
+   if(e.target.closest('#backPost')){e.stopImmediatePropagation();go(5);return}
+ }
+},true);
+if(page===2){
+ document.getElementById('submit')?.addEventListener('click',()=>{
+   setTimeout(()=>{
+     const msg=document.getElementById('msg')?.textContent||'';
+     if(msg.startsWith('Form works.')){try{localStorage.setItem('vicegram_demo_user',document.getElementById('username')?.value||'vicecity_player')}catch(e){}go(3)}
+   },0);
+ });
+}
+if(page===4){
+ document.getElementById('share')?.addEventListener('click',()=>{
+  setTimeout(()=>{const posts=JSON.parse(localStorage.getItem('vicegram_posts')||'[]');if(posts.length){notice('Moment saved. Opening THE FEED.');go(3)}},70);
+ });
+}
+if(page===3){
+ const main=document.querySelector('.screen');
+ const feed=document.createElement('div');
+ feed.style.cssText='position:absolute;top:32%;left:6%;right:6%;bottom:11%;overflow:auto;color:white;font:14px Arial;scrollbar-width:none';
+ main.appendChild(feed);
+ let posts=[];try{posts=JSON.parse(localStorage.getItem('vicegram_posts')||'[]')}catch(e){}
+ posts.forEach((p,i)=>{
+   const item=document.createElement('div');item.style.cssText='margin-bottom:16px;cursor:pointer';
+   const who=document.createElement('div');who.textContent='@'+(localStorage.getItem('vicegram_demo_user')||'vicecity_player');who.style.cssText='padding:9px 0;font-weight:bold';
+   const img=document.createElement('img');img.src=p.image;img.style.cssText='width:100%;height:auto;max-height:320px;object-fit:contain;border-radius:8px';
+   const caption=document.createElement('p');caption.textContent=p.caption||'';item.append(who,img,caption);
+   item.addEventListener('click',()=>go(10,{postIndex:i}));feed.append(item)
+ });
+}
+if(page===7){
+ window.addEventListener('message',e=>{if(e.data?.vicegramProfile){const name=document.querySelector('.name');if(name)name.textContent='@'+e.data.vicegramProfile}});
+}
+if(page===10){
+ window.addEventListener('message',e=>{if(e.data?.vicegramPost){const info=e.data.vicegramPost;if(info.area){const area=document.querySelector('.location');if(area)area.textContent=info.area}}});
+}
+})();
+</script>
+</body></html>

@@ -1,0 +1,74 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>VICEGRAM — Following</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#050505;color:#f8f3ef;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
+.screen{position:relative;width:100vw;height:100dvh;max-width:calc(100dvh * 946 / 2048);margin:auto;background:#050505;overflow:hidden;container-type:inline-size}
+.frame{position:absolute;inset:0;border:1.2cqw solid #fc1683;border-radius:9.5cqw;pointer-events:none;z-index:4}
+.head{position:absolute;top:7.5%;left:6%;right:6%;display:flex;align-items:center;gap:4%;z-index:1}
+.back{border:0;background:none;color:#f8f3ef;font-size:8cqw;cursor:pointer;padding:0;line-height:1}h1{font-size:6.3cqw;margin:0;letter-spacing:.04em}.sub{position:absolute;top:13.5%;left:7%;font-size:3.7cqw;color:#a8a3a5}
+.list{position:absolute;top:18%;bottom:13%;left:6%;right:6%;overflow:auto;scrollbar-width:thin;scrollbar-color:#f71985 transparent}.person{width:100%;display:flex;align-items:center;gap:4%;padding:3.5% 0;background:transparent;color:inherit;border:0;border-bottom:1px solid #2d2229;text-align:left;cursor:pointer}.avatar{flex:0 0 13cqw;width:13cqw;height:13cqw;border-radius:50%;border:2px solid #f71985;display:grid;place-items:center;font-size:5cqw;font-weight:bold;background:#1b1118}.detail{flex:1;min-width:0;display:flex;flex-direction:column;gap:1.1cqw}.detail strong{font-size:4.3cqw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.detail small{font-size:3.4cqw;color:#a9a4a7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chevron{font-size:7cqw;color:#999}.navart{position:absolute;bottom:0;left:0;width:100%;height:12.6953125%;pointer-events:none;z-index:2}.nav{position:absolute;bottom:1%;left:2%;right:2%;height:8%;display:grid;grid-template-columns:repeat(5,1fr);z-index:3}.nav button{border:0;background:transparent;cursor:pointer}.toast{display:none;position:absolute;bottom:13%;left:7%;right:7%;background:#20131b;border:1px solid #f71985;border-radius:2cqw;padding:3%;font-size:3.5cqw;text-align:center;z-index:5}
+</style></head><body><main class="screen"><div class="frame"></div><header class="head"><button class="back" aria-label="Back" onclick="history.back()">‹</button><h1>FOLLOWING</h1></header><div class="sub">@vicecity_player · Following</div><section class="list" aria-label="Following list"><button class="person" data-user="ryan.305"><span class="avatar">R</span><span class="detail"><strong>@ryan.305</strong><small>Vice City nights</small></span><span class="chevron">›</span></button><button class="person" data-user="miami.dreams"><span class="avatar">M</span><span class="detail"><strong>@miami.dreams</strong><small>Vice Beach</small></span><span class="chevron">›</span></button><button class="person" data-user="leonidaboys"><span class="avatar">L</span><span class="detail"><strong>@leonidaboys</strong><small>Welcome to Leonida</small></span><span class="chevron">›</span></button><button class="person" data-user="vice.style"><span class="avatar">V</span><span class="detail"><strong>@vice.style</strong><small>Life in Leonida</small></span><span class="chevron">›</span></button><button class="person" data-user="sunset.driver"><span class="avatar">S</span><span class="detail"><strong>@sunset.driver</strong><small>Chasing sunsets</small></span><span class="chevron">›</span></button><button class="person" data-user="ocean.drive"><span class="avatar">O</span><span class="detail"><strong>@ocean.drive</strong><small>Ocean Drive</small></span><span class="chevron">›</span></button></section><img class="navart" alt="" src="assets/09_7109663525.png"><nav class="nav" aria-label="Navigation"><button aria-label="The Feed"></button><button aria-label="Discover"></button><button aria-label="New Moment"></button><button aria-label="Leonida Map"></button><button aria-label="Profile"></button></nav><div id="toast" class="toast"></div></main><script>
+const toast=document.getElementById('toast');let timer;function note(t){toast.textContent=t;toast.style.display='block';clearTimeout(timer);timer=setTimeout(()=>toast.style.display='none',2200)}
+document.querySelectorAll('.person').forEach(b=>b.onclick=()=>note('View @'+b.dataset.user+' — available after screens are connected'));
+document.querySelectorAll('.nav button').forEach((b,i)=>b.onclick=()=>note(['The Feed','Discover','New Moment','Leonida Map','Profile'][i]+' — navigation will be connected later'));
+</script>
+<script>
+(function(){
+const page=9;
+function go(to,info){parent.postMessage({vicegram:true,action:'go',to,info:info||{}},'*')}
+function notice(text){parent.postMessage({vicegram:true,action:'notice',text},'*')}
+document.addEventListener('click',function(e){
+ const nav=e.target.closest('.nav button');
+ if(nav){e.stopImmediatePropagation();e.preventDefault();go([3,3,4,5,6][[...nav.parentElement.children].indexOf(nav)]);return}
+ if(page===5){
+   const photo=e.target.closest('.photo');
+   if(photo){e.stopImmediatePropagation();e.preventDefault();go(10,{area:document.getElementById('areaTitle')?.textContent||'Vice City'});return}
+ }
+ if(page===6||page===7){
+   const stat=e.target.closest('.stat');
+   if(stat){let index=[...stat.parentElement.children].indexOf(stat);if(index===1||index===2){e.stopImmediatePropagation();go(index===1?8:9);return}}
+   if(e.target.closest('#grid img,#gallery img')){e.stopImmediatePropagation();go(10);return}
+ }
+ if(page===8||page===9){
+   const person=e.target.closest('.person');
+   if(person){e.stopImmediatePropagation();go(7,{username:person.dataset.user});return}
+ }
+ if(page===10){
+   if(e.target.closest('#author')){e.stopImmediatePropagation();go(7,{username:'ryan.305'});return}
+   if(e.target.closest('#backPost')){e.stopImmediatePropagation();go(5);return}
+ }
+},true);
+if(page===2){
+ document.getElementById('submit')?.addEventListener('click',()=>{
+   setTimeout(()=>{
+     const msg=document.getElementById('msg')?.textContent||'';
+     if(msg.startsWith('Form works.')){try{localStorage.setItem('vicegram_demo_user',document.getElementById('username')?.value||'vicecity_player')}catch(e){}go(3)}
+   },0);
+ });
+}
+if(page===4){
+ document.getElementById('share')?.addEventListener('click',()=>{
+  setTimeout(()=>{const posts=JSON.parse(localStorage.getItem('vicegram_posts')||'[]');if(posts.length){notice('Moment saved. Opening THE FEED.');go(3)}},70);
+ });
+}
+if(page===3){
+ const main=document.querySelector('.screen');
+ const feed=document.createElement('div');
+ feed.style.cssText='position:absolute;top:32%;left:6%;right:6%;bottom:11%;overflow:auto;color:white;font:14px Arial;scrollbar-width:none';
+ main.appendChild(feed);
+ let posts=[];try{posts=JSON.parse(localStorage.getItem('vicegram_posts')||'[]')}catch(e){}
+ posts.forEach((p,i)=>{
+   const item=document.createElement('div');item.style.cssText='margin-bottom:16px;cursor:pointer';
+   const who=document.createElement('div');who.textContent='@'+(localStorage.getItem('vicegram_demo_user')||'vicecity_player');who.style.cssText='padding:9px 0;font-weight:bold';
+   const img=document.createElement('img');img.src=p.image;img.style.cssText='width:100%;height:auto;max-height:320px;object-fit:contain;border-radius:8px';
+   const caption=document.createElement('p');caption.textContent=p.caption||'';item.append(who,img,caption);
+   item.addEventListener('click',()=>go(10,{postIndex:i}));feed.append(item)
+ });
+}
+if(page===7){
+ window.addEventListener('message',e=>{if(e.data?.vicegramProfile){const name=document.querySelector('.name');if(name)name.textContent='@'+e.data.vicegramProfile}});
+}
+if(page===10){
+ window.addEventListener('message',e=>{if(e.data?.vicegramPost){const info=e.data.vicegramPost;if(info.area){const area=document.querySelector('.location');if(area)area.textContent=info.area}}});
+}
+})();
+</script>
+</body></html>

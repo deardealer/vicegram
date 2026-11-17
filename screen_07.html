@@ -1,0 +1,72 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VICEGRAM — Other user profile</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#050505;color:#f8f4f1;font-family:Arial,Helvetica,sans-serif;overflow:hidden}.screen{position:relative;width:100vw;height:100dvh;max-width:calc(100dvh * 355 / 768);margin:auto;overflow:hidden;container-type:inline-size;background:#050505}.art{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.name{position:absolute;left:27.3%;top:19.3%;font-size:4.25cqw;font-weight:700;max-width:68%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bio{position:absolute;left:27.3%;top:21.6%;font-size:3.7cqw;color:#aaa;max-width:68%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stats{position:absolute;top:27.2%;left:6%;right:6%;height:5.7%;display:grid;grid-template-columns:repeat(3,1fr);gap:1%;align-items:center;text-align:center}.stat{display:flex;flex-direction:column;gap:0.4cqw;align-items:center}.stat strong{font-size:4.7cqw;line-height:1.2}.stat span{font-size:3.45cqw;line-height:1.2}.gallery{position:absolute;left:6%;right:6%;top:51.8%;bottom:12%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:2%;overflow:auto;scrollbar-width:none}.gallery:empty{display:none}.gallery img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid #fb1985;border-radius:3cqw}.empty{position:absolute;left:8%;right:8%;top:55%;height:11%;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:4cqw;text-align:center;pointer-events:none}.nav{position:absolute;left:2%;right:2%;bottom:1%;height:8%;display:grid;grid-template-columns:repeat(5,1fr)}.nav button{background:transparent;border:0;cursor:pointer}.notice{position:absolute;bottom:11%;left:9%;right:9%;padding:2%;border-radius:3cqw;background:#26111c;border:1px solid #fb1985;text-align:center;font-size:3cqw;display:none}
+</style></head><body><main class="screen"><img class="art" alt="VICEGRAM profile" src="assets/07_3673956987.png"><div class="name">@leonida_player</div><div class="bio">Life in Leonida.</div><div class="stats"><div class="stat"><strong id="shots">0</strong><span>Shots</span></div><div class="stat"><strong>0</strong><span>Followers</span></div><div class="stat"><strong>0</strong><span>Following</span></div></div><div id="empty" class="empty">No moments yet.</div><div class="gallery" id="gallery"></div><nav class="nav" aria-label="Navigation"><button aria-label="Feed"></button><button aria-label="Discover"></button><button aria-label="New Moment"></button><button aria-label="Map"></button><button aria-label="Profile"></button></nav><div class="notice" id="notice" role="status"></div></main><script>
+// Read-only public profile: no upload, edit, or sharing controls.
+const gallery=document.getElementById('gallery');let posts=[];try{const raw=JSON.parse(localStorage.getItem('vicegram_other_user_posts')||'[]');if(Array.isArray(raw))posts=raw}catch(e){}
+const images=posts.map(p=>({src:p.image||p.photo||p.src||p.dataUrl,caption:p.caption||'Moment'})).filter(p=>typeof p.src==='string'&&p.src.startsWith('data:image/'));
+document.getElementById('shots').textContent=images.length;document.getElementById('empty').hidden=images.length>0;
+images.forEach(p=>{const img=document.createElement('img');img.src=p.src;img.alt=p.caption;gallery.appendChild(img)});
+let timer;document.querySelectorAll('.nav button').forEach((b,i)=>b.addEventListener('click',()=>{const n=document.getElementById('notice');n.textContent=['Feed','Discover','New Moment','Map','Profile'][i]+' — available when screens are connected';n.style.display='block';clearTimeout(timer);timer=setTimeout(()=>n.style.display='none',1900)}));
+</script>
+<script>
+(function(){
+const page=7;
+function go(to,info){parent.postMessage({vicegram:true,action:'go',to,info:info||{}},'*')}
+function notice(text){parent.postMessage({vicegram:true,action:'notice',text},'*')}
+document.addEventListener('click',function(e){
+ const nav=e.target.closest('.nav button');
+ if(nav){e.stopImmediatePropagation();e.preventDefault();go([3,3,4,5,6][[...nav.parentElement.children].indexOf(nav)]);return}
+ if(page===5){
+   const photo=e.target.closest('.photo');
+   if(photo){e.stopImmediatePropagation();e.preventDefault();go(10,{area:document.getElementById('areaTitle')?.textContent||'Vice City'});return}
+ }
+ if(page===6||page===7){
+   const stat=e.target.closest('.stat');
+   if(stat){let index=[...stat.parentElement.children].indexOf(stat);if(index===1||index===2){e.stopImmediatePropagation();go(index===1?8:9);return}}
+   if(e.target.closest('#grid img,#gallery img')){e.stopImmediatePropagation();go(10);return}
+ }
+ if(page===8||page===9){
+   const person=e.target.closest('.person');
+   if(person){e.stopImmediatePropagation();go(7,{username:person.dataset.user});return}
+ }
+ if(page===10){
+   if(e.target.closest('#author')){e.stopImmediatePropagation();go(7,{username:'ryan.305'});return}
+   if(e.target.closest('#backPost')){e.stopImmediatePropagation();go(5);return}
+ }
+},true);
+if(page===2){
+ document.getElementById('submit')?.addEventListener('click',()=>{
+   setTimeout(()=>{
+     const msg=document.getElementById('msg')?.textContent||'';
+     if(msg.startsWith('Form works.')){try{localStorage.setItem('vicegram_demo_user',document.getElementById('username')?.value||'vicecity_player')}catch(e){}go(3)}
+   },0);
+ });
+}
+if(page===4){
+ document.getElementById('share')?.addEventListener('click',()=>{
+  setTimeout(()=>{const posts=JSON.parse(localStorage.getItem('vicegram_posts')||'[]');if(posts.length){notice('Moment saved. Opening THE FEED.');go(3)}},70);
+ });
+}
+if(page===3){
+ const main=document.querySelector('.screen');
+ const feed=document.createElement('div');
+ feed.style.cssText='position:absolute;top:32%;left:6%;right:6%;bottom:11%;overflow:auto;color:white;font:14px Arial;scrollbar-width:none';
+ main.appendChild(feed);
+ let posts=[];try{posts=JSON.parse(localStorage.getItem('vicegram_posts')||'[]')}catch(e){}
+ posts.forEach((p,i)=>{
+   const item=document.createElement('div');item.style.cssText='margin-bottom:16px;cursor:pointer';
+   const who=document.createElement('div');who.textContent='@'+(localStorage.getItem('vicegram_demo_user')||'vicecity_player');who.style.cssText='padding:9px 0;font-weight:bold';
+   const img=document.createElement('img');img.src=p.image;img.style.cssText='width:100%;height:auto;max-height:320px;object-fit:contain;border-radius:8px';
+   const caption=document.createElement('p');caption.textContent=p.caption||'';item.append(who,img,caption);
+   item.addEventListener('click',()=>go(10,{postIndex:i}));feed.append(item)
+ });
+}
+if(page===7){
+ window.addEventListener('message',e=>{if(e.data?.vicegramProfile){const name=document.querySelector('.name');if(name)name.textContent='@'+e.data.vicegramProfile}});
+}
+if(page===10){
+ window.addEventListener('message',e=>{if(e.data?.vicegramPost){const info=e.data.vicegramPost;if(info.area){const area=document.querySelector('.location');if(area)area.textContent=info.area}}});
+}
+})();
+</script>
+</body></html>
